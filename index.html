@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            background-image: url('basement.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        #add {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* The outer container handles horizontal movement */
+        .rats-x {
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: marquee1 var(--animation-time, 10s) linear infinite alternate;
+            /* Added negative animation delay to randomize initial position */
+            animation-delay: var(--animation-delay, 0s); 
+        }
+
+        /* The inner container handles vertical movement */
+        .rats-y {
+            animation: marquee2 var(--animation-time, 10s) linear infinite alternate;
+            /* Added negative animation delay to randomize initial position */
+            animation-delay: var(--animation-delay, 0s);
+        }
+
+        .rats-x,
+        .rats-y,
+        .rat-spin,
+        .rat-spin img {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        #cursor {
+            position: fixed;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        @keyframes marquee1 {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(100vw - 150px)); 
+            }
+        }
+
+        @keyframes marquee2 {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(calc(100vh - 65.39px));
+            }
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="cursor.png" alt="roblox classic aim cursor" id="cursor">
+    <h1 style="
+        -webkit-text-fill-color: red; -webkit-text-stroke: 2px white; text-align: center; font-size: 60px;
+    " id="dialogue">OMG IM ALLERGIC TO RATS, MORE THAN TEN AND ILL DIE!!</h1>
+    <h2 style="-webkit-text-fill-color: red;" id="killcount">KILLS: </h2>
+    <button onclick="addRat()">MAKE MORE</button>
+    <div class="rats-x">
+        <div class="rats-y">
+            <div class="rat-spin">
+                <img src="doombringer.jpeg" width="150px" />
+                <audio src="rat.mp3" loop="true" autoplay></audio>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let spawnCool = 5000
+        let alive = true;
+        let kills = 0;
+        let ratsX = document.getElementsByClassName("rats-x");
+        let ratsY = document.getElementsByClassName("rats-y");
+        
+        var min = 8;
+        var max = 16;
+
+        // Apply styles to initial elements
+        for (let i = 0; i < ratsX.length; i++) {
+            assignRandomAnimation(ratsX[i], ratsY[i]);
+            var g = ratsY[i].querySelector("img");
+            var spin = ratsY[i].querySelector(".rat-spin");
+            g.addEventListener("click", function(){
+                if (g.dataset.dying == "true") return;
+                else{
+                    g.dataset.dying = "true";
+                    kills += 1;
+                    var e = document.createElement("audio");
+                    e.src = "doom.mp3";
+                    ratsY[i].append(e);
+                    e.play();
+                    spin.style.animation = "spin 0.1s linear infinite"
+                    setTimeout(function(){
+                        KABOOM(ratsX[i]);
+                    }, 6500)
+                }
+            })
+        }
+
+        // Helper function to assign random speeds AND random starting positions
+        function assignRandomAnimation(elX, elY) {
+            let randomTimeX = (Math.random() * (max - min) + min);
+            let randomTimeY = (Math.random() * (max - min) + min);
+            
+            elX.style.setProperty('--animation-time', randomTimeX + 's');
+            elY.style.setProperty('--animation-time', randomTimeY + 's');
+
+            // Negative delays force the animation to start "mid-way" through its timeline
+            elX.style.setProperty('--animation-delay', -(Math.random() * randomTimeX) + 's');
+            elY.style.setProperty('--animation-delay', -(Math.random() * randomTimeY) + 's');
+        }
+
+        function KABOOM(a){
+            a.querySelector("img").src = "explode.jpeg";
+            setTimeout(() => {
+                a.remove();
+            }, 100);
+        }
+
+        function changeDialogue(text, delay){
+            setTimeout(()=>{
+                document.getElementById("dialogue").innerText = text;
+                return true;
+            }, delay)
+        }
+
+        function changeBackground(isImage, input){
+            if(isImage == true){
+                document.body.style.backgroundImage = "url(" + input + ")";
+            }
+            else{
+                document.body.style.backgroundColor = input;
+            }
+        }
+
+        function addRat(){
+            var x = document.createElement("div");
+            x.className = "rats-x";
+
+            var y = document.createElement("div");
+            y.className = "rats-y"; // Fixed missing semicolon
+            x.append(y);
+
+            var spin = document.createElement("div");
+            spin.className = "rat-spin";
+            y.append(spin);
+
+            var g = document.createElement("img");
+            g.src = "doombringer.jpeg";
+            g.width = 150;
+            spin.append(g);
+            
+            var e = document.createElement("audio");
+            e.src = "rat.mp3";
+            e.loop = true;
+            spin.append(e);
+            e.play();
+            
+
+            // Apply the random timing and starting offset
+            assignRandomAnimation(x, y);
+            g.addEventListener("click", function(){
+                if (g.dataset.dying == "true") return;
+                else{
+                    g.dataset.dying = "true";
+                    kills += 1;
+                    var e = document.createElement("audio");
+                    e.src = "doom.mp3";
+                    y.append(e);
+                    e.play();
+                    spin.style.animation = "spin 0.1s linear infinite";
+                    setTimeout(function(){
+                        KABOOM(x);
+                    }, 6500)
+                }
+            })
+            document.body.append(x);
+        }
+        document.addEventListener("keydown", (event) => {
+            if(event.key == " "){
+                addRat();
+            }
+        })
+        window.addEventListener("resize", () => {
+            let ratsX = document.getElementsByClassName("rats-x");
+            let ratsY = document.getElementsByClassName("rats-y");
+
+            for (let i = 0; i < ratsX.length; i++) {
+                assignRandomAnimation(ratsX[i], ratsY[i]);
+            }
+        });
+        document.addEventListener("dragstart", (event) => {
+            if (event.target.tagName === "IMG") {
+                event.preventDefault();
+            }
+        });
+        document.addEventListener("mousemove", (event)=>{
+            const cursor = document.getElementById("cursor");
+            cursor.style.left = event.clientX + "px";
+            cursor.style.top = event.clientY + "px";
+            console.log("cursor moved!!");
+        })
+        setInterval(()=>{
+            if(alive){
+                addRat();
+            }
+        }, spawnCool)
+
+        const triggers = [false, false, false, false]
+        const story = [ //other system I was gonna use (I am now using it)
+            [
+                {type: "dialogue", text: "thank goodness, we made it out of the house..", delay: 1000},
+                {type: "background", image: "outside.jpg", delay: 0},
+                {type: "dialogue", text: "OH SHOOT", delay: 5000},
+                {type: "dialogue", text: "theres more?!?!", delay: 2000},
+                {type: "dialogue", text: "conviniently they are all spawning about 20% faster!", delay: 5000},
+                {type: "setSpawnCooldown", cooldown: 3000, delay: 0},
+            ]
+        ]
+        async function playStory(segment){
+            console.log("running story!");
+            for(const thing of story[segment]){
+                if (thing.type == "dialogue"){
+                    await changeDialogue(thing.text, thing.delay);
+                    console.log("changed dialogue");
+                }
+                if(thing.type == "background"){
+                     await setTimeout(()=>{
+                        changeBackground(true, thing.image);
+                        console.log("changed background");
+                        return true;
+                    },thing.delay);
+                }
+                if(thing.type == "setSpawnCooldown"){
+                    await setTimeout(()=>{
+                        spawnCool = thing.cooldown;
+                    },thing.delay);
+                }
+            }
+
+        }
+        setInterval(async ()=>{ //gameloop
+            if(document.getElementsByClassName("rats-x").length > 10){ //death
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = "black";
+                document.body.innerHTML = "";
+                const deathText = document.createElement("h1");
+                deathText.innerText = "DEATH";
+                deathText.style.textAlign = "center";
+                deathText.style.webkitTextFillColor = "white";
+                deathText.style.fontSize = "60px";
+                document.body.append(deathText);
+                alive = false;
+            }
+            if(kills >= 10 && triggers[0] == false){
+                triggers[0] = true;
+                spawnCool = 4000;
+                playStory(0);
+            }
+            document.getElementById("killcount").innerText = "KILLS: " + kills;
+        }, 100)
+    </script>
+</body>
+
+</html>
